@@ -2,7 +2,7 @@
 
 Kalkulator nilai minimal, IP semester, dan simulasi target IPK untuk mahasiswa. Dibangun sepenuhnya dengan **IBM Bob** sebagai AI agent untuk Capstone Project Hacktiv8 x IBM (Track IBM Bob).
 
-**Demo:** https://USERNAME.github.io/targetip/ *(ganti `USERNAME` dengan username GitHub kamu)*
+**Demo:** https://firiansyah.github.io/targetip/ 
 
 ## Masalah yang diselesaikan
 
