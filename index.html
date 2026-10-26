@@ -1,0 +1,2281 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TargetIP – Kalkulator Nilai Mahasiswa</title>
+  <!-- Poppins from Google Fonts (only allowed external resource per R4) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ============================================================
+       CSS CUSTOM PROPERTIES (R4 palette)
+    ============================================================ */
+    :root {
+      --green:       #0E8A2B;
+      --green-h:     #0a6e22;
+      --green-soft:  #E7F4E8;
+      --peach:       #FCE9DA;
+      --ink:         #1E1E1E;
+      --muted:       #8B8B8B;
+      --line:        #ECECEC;
+      --warn:        #E8912D;
+      --warn-soft:   #FEF3E2;
+      --danger:      #D64545;
+      --danger-soft: #FDF0F0;
+      --white:       #ffffff;
+      --surface:     #F8FAF8;
+      --page-bg:     #FBF9F6;
+      --radius:      24px;
+      --radius-sm:   12px;
+      --radius-pill: 999px;
+      --shadow:      0 2px 12px rgba(0,0,0,.07);
+      --shadow-sm:   0 1px 6px rgba(0,0,0,.05);
+      --transition:  .17s ease;
+    }
+
+    /* ============================================================
+       RESET & BASE
+    ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: var(--page-bg);
+      color: var(--ink);
+      font-family: 'Poppins', "Segoe UI", system-ui, sans-serif;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    button { cursor: pointer; font-family: inherit; }
+    input, select {
+      font-family: inherit;
+      font-size: .9rem;
+      background: var(--surface);
+      color: var(--ink);
+      border: 1.5px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: .45rem .75rem;
+      transition: border-color var(--transition), box-shadow var(--transition);
+      width: 100%;
+      font-variant-numeric: tabular-nums;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px rgba(14,138,43,.18);
+    }
+    input::placeholder { color: #bbb; font-weight: 400; }
+    input[type="number"]::-webkit-inner-spin-button { opacity: .35; }
+    label {
+      display: block;
+      font-size: .8rem;
+      color: var(--muted);
+      margin-bottom: .25rem;
+      font-weight: 500;
+    }
+    .field { margin-bottom: .75rem; }
+
+    /* ============================================================
+       LAYOUT COLUMN
+    ============================================================ */
+    .col {
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+    @media (max-width: 600px) { .col { padding: 0 1rem; } }
+
+    /* ============================================================
+       PERSISTENT TOP NAV
+    ============================================================ */
+    .top-nav {
+      background: var(--white);
+      border-bottom: 1px solid var(--line);
+      position: sticky;
+      top: 0;
+      z-index: 200;
+    }
+    .top-nav-inner {
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      height: 52px;
+    }
+    @media (max-width: 600px) { .top-nav-inner { padding: 0 1rem; } }
+    .logo-mark {
+      display: flex; align-items: center; gap: .4rem;
+      text-decoration: none; flex-shrink: 0; margin-right: .5rem;
+    }
+    .logo-mark svg { width: 24px; height: 24px; }
+    .logo-text {
+      font-size: .95rem; font-weight: 700; color: var(--green); letter-spacing: -.02em;
+    }
+    /* nav links */
+    .nav-links {
+      display: flex; gap: 0; align-items: stretch;
+      overflow-x: auto; scrollbar-width: none; flex: 1;
+    }
+    .nav-links::-webkit-scrollbar { display: none; }
+    .nav-link {
+      background: none; border: none; font-family: inherit;
+      font-size: .8rem; font-weight: 600; color: var(--muted);
+      padding: 0 .8rem; cursor: pointer; white-space: nowrap;
+      border-bottom: 2.5px solid transparent; height: 52px;
+      display: flex; align-items: center;
+      transition: color var(--transition), border-color var(--transition);
+    }
+    .nav-link:hover { color: var(--ink); }
+    .nav-link.active { color: var(--green); border-bottom-color: var(--green); }
+    .nav-link:focus-visible { outline: 2px solid var(--green); outline-offset: -2px; }
+    /* reset button in nav */
+    .nav-reset {
+      margin-left: auto; flex-shrink: 0;
+      background: none; border: none; font-family: inherit;
+      font-size: .75rem; color: var(--muted); cursor: pointer; padding: .3rem .5rem;
+      text-decoration: underline; text-underline-offset: 2px;
+    }
+    .nav-reset:hover { color: var(--danger); }
+    .nav-reset:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; border-radius: 3px; }
+
+    /* ============================================================
+       VIEWS (replaces tab-panel)
+    ============================================================ */
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* ============================================================
+       LANDING PAGE
+    ============================================================ */
+    .landing-hero {
+      padding: 4rem 0 3rem;
+      display: flex; align-items: center; gap: 2.5rem;
+    }
+    @media (max-width: 600px) { .landing-hero { padding: 2.5rem 0 2rem; flex-direction: column; gap: 1.5rem; } }
+    .landing-hero-text { flex: 1; min-width: 0; }
+    .landing-tag {
+      display: inline-block; font-size: .72rem; font-weight: 700;
+      color: var(--green); background: var(--green-soft);
+      border-radius: var(--radius-pill); padding: .2rem .7rem;
+      letter-spacing: .06em; text-transform: uppercase; margin-bottom: .7rem;
+    }
+    .landing-headline {
+      font-size: clamp(2rem, 5vw, 3rem); font-weight: 700;
+      line-height: 1.1; letter-spacing: -.03em;
+      color: var(--ink); margin-bottom: .75rem;
+    }
+    .landing-sub { font-size: .95rem; color: var(--muted); margin-bottom: 1.5rem; max-width: 420px; }
+    .landing-btns { display: flex; gap: .6rem; flex-wrap: wrap; }
+    .landing-illo {
+      flex-shrink: 0; width: 110px; height: 110px;
+      background: var(--peach); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .landing-illo svg { width: 68px; height: 68px; }
+    @media (max-width: 400px) { .landing-illo { display: none; } }
+    /* feature cards section */
+    .feature-section { padding-bottom: 3.5rem; }
+    .feature-section-title {
+      font-size: .8rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .06em; color: var(--muted); margin-bottom: 1rem;
+    }
+    .feature-cards {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: .75rem;
+    }
+    @media (max-width: 640px) { .feature-cards { grid-template-columns: 1fr; } }
+    .feature-card {
+      background: var(--white); border: 1px solid var(--line);
+      border-radius: 16px; padding: 1.1rem 1.2rem;
+      box-shadow: var(--shadow-sm);
+    }
+    .feature-card-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: var(--green-soft); display: flex; align-items: center;
+      justify-content: center; margin-bottom: .6rem;
+    }
+    .feature-card-icon svg { width: 20px; height: 20px; }
+    .feature-card-title { font-size: .9rem; font-weight: 700; color: var(--ink); margin-bottom: .3rem; }
+    .feature-card-desc { font-size: .8rem; color: var(--muted); margin-bottom: .75rem; line-height: 1.5; }
+    .feature-card-link {
+      font-size: .78rem; font-weight: 600; color: var(--green);
+      background: none; border: none; cursor: pointer; font-family: inherit;
+      padding: 0; text-decoration: underline; text-underline-offset: 2px;
+    }
+    .feature-card-link:hover { color: var(--green-h); }
+
+    /* ============================================================
+       TOOL PAGE HEADER
+    ============================================================ */
+    .page-header {
+      padding: 1.75rem 0 1.25rem;
+    }
+    .page-title {
+      font-size: 1.6rem; font-weight: 700; letter-spacing: -.02em;
+      color: var(--ink); line-height: 1.2;
+    }
+
+    /* ============================================================
+       CONTENT AREA
+    ============================================================ */
+    .content { padding-bottom: 3rem; }
+
+    /* ============================================================
+       BUTTONS
+    ============================================================ */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem;
+      border-radius: var(--radius-pill);
+      font-family: inherit;
+      font-size: .82rem;
+      font-weight: 600;
+      padding: .45rem 1rem;
+      border: 2px solid transparent;
+      transition: background var(--transition), color var(--transition), border-color var(--transition), transform .1s;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn:active { transform: scale(.97); }
+    .btn:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+    .btn-primary { background: var(--green); color: #fff; }
+    .btn-primary:hover { background: var(--green-h); }
+    .btn-outline { background: transparent; color: var(--green); border-color: var(--green); }
+    .btn-outline:hover { background: var(--green-soft); }
+    .btn-ghost { background: transparent; color: var(--muted); border-color: var(--line); }
+    .btn-ghost:hover { background: var(--surface); color: var(--ink); }
+    .btn-danger { background: transparent; color: var(--danger); border-color: rgba(214,69,69,.3); }
+    .btn-danger:hover { background: var(--danger-soft); }
+    .btn-sm { font-size: .75rem; padding: .3rem .75rem; }
+    .btn-xs { font-size: .72rem; padding: .22rem .55rem; }
+
+    /* ============================================================
+       CARDS (course cards)
+    ============================================================ */
+    .card {
+      background: var(--white);
+      border: 1.5px solid var(--line);
+      border-radius: 16px;
+      padding: 1.1rem 1.2rem;
+      margin-bottom: .9rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* ============================================================
+       ALERTS / RESULT MESSAGES
+    ============================================================ */
+    .alert {
+      border-radius: var(--radius-sm);
+      padding: .65rem .95rem;
+      font-size: .84rem;
+      margin-bottom: .65rem;
+      border-left: 3.5px solid;
+      line-height: 1.55;
+    }
+    .alert-warn    { background: var(--warn-soft);   border-color: var(--warn);   color: #7a4a00; }
+    .alert-danger  { background: var(--danger-soft); border-color: var(--danger); color: #8b1c1c; }
+    .alert-success { background: var(--green-soft);  border-color: var(--green);  color: #085c1a; }
+    .alert-info    { background: #EEF6FF;            border-color: #3B82F6;       color: #1e3a60; }
+    .alert-neutral { background: var(--surface);     border-color: var(--line);   color: var(--ink); }
+
+    /* ============================================================
+       WEIGHT PROGRESS BAR
+    ============================================================ */
+    .weight-bar-wrap {
+      margin-bottom: .6rem;
+    }
+    .weight-bar-label {
+      font-size: .75rem;
+      color: var(--muted);
+      margin-bottom: .25rem;
+      display: flex;
+      justify-content: space-between;
+    }
+    .weight-bar-label .wb-val { font-weight: 600; color: var(--ink); }
+    .weight-bar-label .wb-val.ok { color: var(--green); }
+    .weight-bar-label .wb-val.warn { color: var(--warn); }
+    .weight-bar-track {
+      height: 6px;
+      background: var(--line);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .weight-bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      background: var(--warn);
+      transition: width .3s, background .3s;
+    }
+    .weight-bar-fill.ok { background: var(--green); }
+
+    /* ============================================================
+       COURSE CARD INTERNALS
+    ============================================================ */
+    .course-header {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      margin-bottom: .65rem;
+      flex-wrap: wrap;
+    }
+    .course-name-input {
+      font-size: 1rem;
+      font-weight: 700;
+      background: transparent;
+      border: none;
+      border-bottom: 2px dashed var(--line);
+      border-radius: 0;
+      color: var(--ink);
+      padding: .1rem .2rem;
+      width: auto;
+      min-width: 130px;
+      flex: 1;
+    }
+    .course-name-input:focus {
+      outline: none;
+      border-bottom-color: var(--green);
+      box-shadow: none;
+    }
+    .sks-inline {
+      display: flex; align-items: center; gap: .3rem;
+      font-size: .8rem; color: var(--muted); font-weight: 500;
+    }
+    .sks-inline input { width: 52px; text-align: center; padding: .28rem .4rem; font-size: .82rem; }
+
+    .target-row {
+      display: flex; align-items: center; gap: .6rem;
+      flex-wrap: wrap; margin-bottom: .75rem;
+      font-size: .84rem;
+    }
+    .target-row label { margin: 0; color: var(--muted); font-weight: 500; }
+    .target-row select { width: auto; padding: .3rem .6rem; font-size: .84rem; }
+
+    /* ============================================================
+       COMPONENT GRID
+    ============================================================ */
+    .comp-grid-header {
+      display: grid;
+      grid-template-columns: 1fr 80px 90px 32px;
+      gap: .35rem .5rem;
+      font-size: .72rem;
+      color: var(--muted);
+      font-weight: 600;
+      margin-bottom: .3rem;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .comp-grid {
+      display: grid;
+      grid-template-columns: 1fr 80px 90px 32px;
+      gap: .35rem .5rem;
+      align-items: center;
+      margin-bottom: .4rem;
+    }
+    @media (max-width: 460px) {
+      .comp-grid, .comp-grid-header { grid-template-columns: 1fr 65px 78px 28px; }
+    }
+    .comp-grid input { font-size: .84rem; }
+
+    /* estimasi input (R3 simulation) */
+    .est-input {
+      border-style: dashed !important;
+      background: #FFFBF4 !important;
+    }
+
+    /* ============================================================
+       RESULT AREA – PER-LETTER STRIP
+    ============================================================ */
+    .course-result { margin-top: .8rem; padding-top: .8rem; border-top: 1.5px solid var(--line); }
+
+    .grade-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .3rem;
+      margin-top: .5rem;
+    }
+    .grade-chip {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 46px;
+      padding: .35rem .4rem .28rem;
+      border-radius: 10px;
+      font-size: .78rem;
+      border: 1.5px solid var(--line);
+      background: var(--surface);
+    }
+    .grade-chip.reachable { background: var(--green-soft); border-color: rgba(14,138,43,.25); }
+    .grade-chip.target-chip { border-color: var(--green); border-width: 2px; }
+    .grade-chip.unreachable { opacity: .5; }
+    .grade-chip .gc-letter {
+      font-weight: 700;
+      font-size: .88rem;
+      color: var(--ink);
+      line-height: 1;
+    }
+    .grade-chip.reachable .gc-letter { color: var(--green); }
+    .grade-chip.unreachable .gc-letter { text-decoration: line-through; color: var(--muted); }
+    .grade-chip .gc-val {
+      font-size: .72rem;
+      color: var(--muted);
+      margin-top: .15rem;
+      font-variant-numeric: tabular-nums;
+    }
+    .grade-chip.reachable .gc-val { color: var(--green); }
+
+    /* ============================================================
+       ANALISIS TARGET PANEL (R3)
+    ============================================================ */
+    .analisis-panel {
+      margin-top: .9rem;
+      padding-top: .9rem;
+      border-top: 1.5px solid var(--line);
+    }
+    .analisis-section-title {
+      font-size: .72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--muted);
+      margin-bottom: .4rem;
+      display: flex;
+      align-items: center;
+      gap: .35rem;
+    }
+    .analisis-section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--line);
+    }
+    .analisis-block { margin-bottom: .85rem; }
+    .big-result {
+      display: flex;
+      align-items: baseline;
+      gap: .45rem;
+      flex-wrap: wrap;
+      margin-bottom: .25rem;
+    }
+    .big-num {
+      font-size: 2.1rem;
+      font-weight: 700;
+      color: var(--green);
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+    .big-num.danger { color: var(--danger); }
+    .big-caption { font-size: .82rem; color: var(--muted); }
+
+    .per-comp-list { list-style: none; }
+    .per-comp-list li {
+      display: flex;
+      align-items: baseline;
+      gap: .5rem;
+      padding: .32rem 0;
+      border-bottom: 1px solid var(--line);
+      font-size: .84rem;
+      flex-wrap: wrap;
+    }
+    .per-comp-list li:last-child { border-bottom: none; }
+    .pco-name { font-weight: 600; color: var(--ink); min-width: 80px; }
+    .pco-tag {
+      font-size: .68rem;
+      font-weight: 600;
+      background: var(--peach);
+      color: #8a4a00;
+      border-radius: var(--radius-pill);
+      padding: .1rem .45rem;
+    }
+    .pco-result { color: var(--muted); }
+    .pco-result strong { color: var(--ink); font-variant-numeric: tabular-nums; }
+    .pco-result.safe { color: var(--green); }
+    .pco-result.impossible { color: var(--danger); }
+
+    /* Simulasi section */
+    .sim-est-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: .5rem;
+      margin-top: .5rem;
+    }
+    .sim-est-item label { font-size: .75rem; }
+    .sim-est-item input { font-size: .84rem; }
+
+    /* ============================================================
+       IP SEMESTER
+    ============================================================ */
+    .ip-course-header {
+      display: grid;
+      grid-template-columns: 1fr 65px 105px 32px;
+      gap: .35rem .5rem;
+      font-size: .72rem;
+      color: var(--muted);
+      font-weight: 600;
+      margin-bottom: .3rem;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .ip-course-row {
+      display: grid;
+      grid-template-columns: 1fr 65px 105px 32px;
+      gap: .35rem .5rem;
+      align-items: center;
+      margin-bottom: .4rem;
+    }
+    .ip-result-box {
+      background: var(--green-soft);
+      border: 2px solid rgba(14,138,43,.25);
+      border-radius: 16px;
+      padding: 1rem 1.3rem;
+      margin-top: .85rem;
+      display: flex;
+      align-items: baseline;
+      gap: .6rem;
+    }
+    .ip-val { font-size: 2.6rem; font-weight: 700; color: var(--green); line-height: 1; font-variant-numeric: tabular-nums; }
+    .ip-label { font-size: .85rem; color: var(--muted); }
+
+    /* ============================================================
+       IPK SIMULATOR
+    ============================================================ */
+    .sim-grid-inputs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: .75rem;
+    }
+    @media (max-width: 460px) { .sim-grid-inputs { grid-template-columns: 1fr; } }
+    .sim-result-box {
+      background: var(--peach);
+      border: 2px solid rgba(232,145,45,.35);
+      border-radius: 16px;
+      padding: 1rem 1.3rem;
+      margin-top: .85rem;
+      display: flex;
+      align-items: baseline;
+      gap: .6rem;
+    }
+    .sim-val { font-size: 2.3rem; font-weight: 700; color: var(--warn); line-height: 1; font-variant-numeric: tabular-nums; }
+    .sim-label { font-size: .85rem; color: #7a4a00; }
+
+    /* ============================================================
+       IP TAB – LINKED COURSES & PREDICTIONS (R6)
+    ============================================================ */
+    .ip-linked-header {
+      display: grid;
+      grid-template-columns: 1fr 58px 90px auto 52px;
+      gap: .35rem .5rem;
+      font-size: .72rem;
+      color: var(--muted);
+      font-weight: 600;
+      margin-bottom: .3rem;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .ip-linked-row {
+      display: grid;
+      grid-template-columns: 1fr 58px 90px auto 52px;
+      gap: .35rem .5rem;
+      align-items: center;
+      margin-bottom: .4rem;
+    }
+    @media (max-width: 500px) {
+      .ip-linked-header, .ip-linked-row {
+        grid-template-columns: 1fr 46px 80px auto 40px;
+      }
+    }
+    /* chip labels */
+    .chip {
+      display: inline-flex; align-items: center;
+      font-size: .67rem; font-weight: 700;
+      padding: .15rem .45rem;
+      border-radius: var(--radius-pill);
+      white-space: nowrap;
+    }
+    .chip-target  { background: var(--green-soft); color: var(--green); }
+    .chip-actual  { background: #EEF6FF; color: #2563eb; }
+    .chip-manual  { background: var(--peach); color: #8a4a00; }
+    .chip-warn    { background: var(--warn-soft); color: #7a4a00; }
+    .reset-link {
+      font-size: .72rem; color: var(--muted); text-decoration: underline;
+      background: none; border: none; cursor: pointer; padding: 0; font-family: inherit;
+    }
+    .reset-link:hover { color: var(--danger); }
+    /* two-prediction boxes */
+    .ip-pred-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: .75rem;
+      margin-top: .85rem;
+    }
+    @media (max-width: 460px) { .ip-pred-grid { grid-template-columns: 1fr; } }
+    .ip-pred-box {
+      border-radius: 16px;
+      padding: .9rem 1.1rem;
+      border: 2px solid;
+    }
+    .ip-pred-box.primary { background: var(--green-soft); border-color: rgba(14,138,43,.3); }
+    .ip-pred-box.secondary { background: var(--warn-soft); border-color: rgba(232,145,45,.35); }
+    .ip-pred-label { font-size: .72rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; margin-bottom: .2rem; }
+    .ip-pred-val { font-size: 2.3rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+    .ip-pred-box.primary .ip-pred-val { color: var(--green); }
+    .ip-pred-box.secondary .ip-pred-val { color: var(--warn); }
+    .ip-pred-sub { font-size: .76rem; color: var(--muted); margin-top: .18rem; }
+    .ip-summary-line { font-size: .8rem; color: var(--muted); margin-top: .6rem; text-align: center; }
+    /* IPK projection */
+    .ipk-proj-box {
+      margin-top: .85rem;
+      background: var(--surface);
+      border: 1.5px solid var(--line);
+      border-radius: 14px;
+      padding: .85rem 1rem;
+      font-size: .84rem;
+    }
+    .ipk-proj-label { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-bottom: .3rem; }
+    .ipk-proj-val { font-size: 1.55rem; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; display: inline; }
+    .ipk-proj-hint { font-size: .78rem; color: var(--muted); font-style: italic; }
+    .flag-impossible {
+      display: inline-flex; align-items: center; gap: .25rem;
+      font-size: .68rem; font-weight: 600;
+      color: #7a4a00;
+      background: var(--warn-soft);
+      border-radius: var(--radius-pill);
+      padding: .12rem .45rem;
+      white-space: nowrap;
+    }
+    .ip-name-link {
+      background: none; border: none; cursor: pointer; font-family: inherit;
+      color: var(--ink); text-align: left; padding: 0;
+      font-size: .84rem; font-weight: 500;
+      text-decoration: none;
+    }
+    .ip-name-link:hover { color: var(--green); text-decoration: underline; }
+    .ip-name-link:focus-visible { outline: 2px solid var(--green); outline-offset: 1px; border-radius: 3px; }
+
+    /* ============================================================
+       GRADE SCALE TABLE
+    ============================================================ */
+    .scale-note { font-size: .8rem; color: var(--muted); margin-bottom: .75rem; font-style: italic; }
+    .tbl-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+    th { text-align: left; padding: .5rem .6rem; color: var(--muted); font-weight: 600; font-size: .75rem; border-bottom: 1.5px solid var(--line); text-transform: uppercase; letter-spacing: .04em; }
+    td { padding: .5rem .6rem; border-bottom: 1px solid var(--line); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    .tbl-inp { background: var(--surface); border: 1.5px solid var(--line); border-radius: 10px; padding: .32rem .55rem; font-size: .84rem; color: var(--ink); width: 100%; font-family: inherit; font-variant-numeric: tabular-nums; }
+    .tbl-inp:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 2px rgba(14,138,43,.18); }
+
+    /* ============================================================
+       MISC
+    ============================================================ */
+    .row-between { display: flex; gap: .5rem; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: .75rem; }
+    .mt-1 { margin-top: .5rem; }
+    .mt-2 { margin-top: 1rem; }
+    .text-muted { color: var(--muted); font-size: .84rem; }
+    .empty-state { text-align: center; padding: 2.5rem 1rem; color: var(--muted); font-size: .9rem; }
+    .empty-state svg { display: block; margin: 0 auto .75rem; opacity: .35; }
+
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--line); border-radius: 99px; }
+  </style>
+</head>
+<body>
+
+<!-- ============================================================
+     PERSISTENT TOP NAV
+============================================================ -->
+<nav class="top-nav" id="topNav" aria-label="Navigasi utama">
+  <div class="top-nav-inner">
+    <a class="logo-mark" href="#home" aria-label="TargetIP – kembali ke beranda">
+      <svg viewBox="0 0 28 28" fill="none" aria-hidden="true">
+        <rect x="2" y="18" width="5" height="8" rx="2" fill="#0E8A2B"/>
+        <rect x="9" y="13" width="5" height="13" rx="2" fill="#0E8A2B" opacity=".8"/>
+        <rect x="16" y="8"  width="5" height="18" rx="2" fill="#0E8A2B" opacity=".6"/>
+        <rect x="23" y="3"  width="3" height="23" rx="1.5" fill="#0E8A2B" opacity=".4"/>
+      </svg>
+      <span class="logo-text">TargetIP</span>
+    </a>
+    <div class="nav-links" role="list">
+      <a class="nav-link" href="#home"          role="listitem" data-view="home">Beranda</a>
+      <a class="nav-link" href="#nilai-minimum" role="listitem" data-view="nilai-minimum">Nilai Minimum</a>
+      <a class="nav-link" href="#ip-semester"   role="listitem" data-view="ip-semester">IP Semester</a>
+      <a class="nav-link" href="#simulasi-ipk"  role="listitem" data-view="simulasi-ipk">Simulasi IPK</a>
+      <a class="nav-link" href="#skala-nilai"   role="listitem" data-view="skala-nilai">Skala Nilai</a>
+    </div>
+    <button class="nav-reset" id="btnReset">Reset data</button>
+  </div>
+</nav>
+
+<!-- ============================================================
+     LANDING VIEW  (#home)
+============================================================ -->
+<div class="view active" id="view-home">
+  <div class="col">
+    <div class="landing-hero">
+      <div class="landing-hero-text">
+        <span class="landing-tag">Kalkulator Nilai</span>
+        <h1 class="landing-headline">Hitung nilai minimal<br>yang kamu butuhkan.</h1>
+        <p class="landing-sub">Masukkan komponen nilai, set target, dan lihat berapa yang harus kamu capai di ujian.</p>
+        <div class="landing-btns">
+          <a class="btn btn-primary" href="#nilai-minimum" id="landingStart">Mulai hitung</a>
+          <a class="btn btn-outline" href="#features">Lihat fitur</a>
+        </div>
+      </div>
+      <div class="landing-illo" aria-hidden="true">
+        <svg viewBox="0 0 54 54" fill="none">
+          <rect x="4"  y="38" width="11" height="12" rx="3" fill="#FCE9DA"/>
+          <rect x="17" y="28" width="11" height="22" rx="3" fill="#FCE9DA"/>
+          <rect x="30" y="18" width="11" height="32" rx="3" fill="#FCE9DA"/>
+          <rect x="43" y="8"  width="7"  height="42" rx="3" fill="#FCE9DA"/>
+          <path d="M6 40 L17 30 L30 20 L46 10" stroke="#E8912D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="46" cy="10" r="3" fill="#0E8A2B"/>
+        </svg>
+      </div>
+    </div>
+    <div class="feature-section" id="features">
+      <div class="feature-section-title">Fitur</div>
+      <div class="feature-cards">
+        <div class="feature-card">
+          <div class="feature-card-icon">
+            <svg viewBox="0 0 20 20" fill="none" stroke="#0E8A2B" stroke-width="1.6" stroke-linecap="round"><path d="M3 17l4-8 4 4 3-6 3 3"/></svg>
+          </div>
+          <div class="feature-card-title">Nilai Minimum</div>
+          <div class="feature-card-desc">Hitung berapa nilai yang harus kamu raih di komponen yang belum keluar.</div>
+          <button class="feature-card-link" data-goto="nilai-minimum">Buka &rarr;</button>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-icon">
+            <svg viewBox="0 0 20 20" fill="none" stroke="#0E8A2B" stroke-width="1.6" stroke-linecap="round"><circle cx="10" cy="10" r="7"/><path d="M10 6v4l2.5 2.5"/></svg>
+          </div>
+          <div class="feature-card-title">IP Semester</div>
+          <div class="feature-card-desc">Prediksi IP semester ini dari matkul yang sudah kamu masukkan.</div>
+          <button class="feature-card-link" data-goto="ip-semester">Buka &rarr;</button>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-icon">
+            <svg viewBox="0 0 20 20" fill="none" stroke="#0E8A2B" stroke-width="1.6" stroke-linecap="round"><path d="M4 16l4-4 3 3 5-8"/><circle cx="16" cy="7" r="2"/></svg>
+          </div>
+          <div class="feature-card-title">Simulasi IPK</div>
+          <div class="feature-card-desc">Hitung IP minimum semester ini untuk mencapai target IPK kumulatif.</div>
+          <button class="feature-card-link" data-goto="simulasi-ipk">Buka &rarr;</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     TOOL VIEW – NILAI MINIMUM  (#nilai-minimum)
+============================================================ -->
+<div class="view" id="view-nilai-minimum">
+  <div class="col">
+    <div class="page-header">
+      <h1 class="page-title">Nilai Minimum</h1>
+    </div>
+    <div class="content">
+      <div class="row-between">
+        <span class="text-muted">Daftar mata kuliah</span>
+        <button class="btn btn-primary btn-sm" id="btnAddCourse">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          Tambah MK
+        </button>
+      </div>
+      <div id="courseList"></div>
+      <div class="empty-state" id="courseEmpty">
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" aria-hidden="true"><rect x="8" y="6" width="32" height="36" rx="4" stroke="#8B8B8B" stroke-width="2"/><path d="M16 16h16M16 22h10M16 28h12" stroke="#8B8B8B" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <p>Belum ada mata kuliah.<br>Klik <strong>Tambah MK</strong> untuk memulai.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     TOOL VIEW – IP SEMESTER  (#ip-semester)
+============================================================ -->
+<div class="view" id="view-ip-semester">
+  <div class="col">
+    <div class="page-header">
+      <h1 class="page-title">IP Semester</h1>
+    </div>
+    <div class="content">
+      <!-- Linked courses (from Nilai Minimum) -->
+      <div class="card" style="margin-bottom:.75rem">
+        <div style="font-size:.8rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.6rem;">
+          Dari tab Nilai Minimum
+        </div>
+        <div class="ip-linked-header">
+          <span>Matkul</span><span>SKS</span><span>Nilai</span><span>Status</span><span>Poin</span>
+        </div>
+        <div id="ipLinkedList"></div>
+        <div id="ipLinkedEmpty" style="display:none;font-size:.82rem;color:var(--muted);padding:.5rem 0;">
+          Belum ada matkul di tab Nilai Minimum.
+        </div>
+        <div id="ipPredictions"></div>
+        <div id="ipkProjection"></div>
+      </div>
+      <!-- Manual extra courses -->
+      <div class="card" style="margin-bottom:0">
+        <div style="font-size:.8rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.6rem;">
+          Matkul manual (di luar daftar di atas)
+        </div>
+        <div class="ip-course-header">
+          <span>Mata Kuliah</span><span>SKS</span><span>Nilai Huruf</span><span></span>
+        </div>
+        <div id="ipCourseList"></div>
+        <button class="btn btn-outline btn-sm mt-1" id="btnAddIpCourse">
+          <svg width="11" height="11" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          Tambah MK
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     TOOL VIEW – SIMULASI IPK  (#simulasi-ipk)
+============================================================ -->
+<div class="view" id="view-simulasi-ipk">
+  <div class="col">
+    <div class="page-header">
+      <h1 class="page-title">Simulasi IPK</h1>
+    </div>
+    <div class="content">
+      <div class="card" style="margin-bottom:0">
+        <div class="sim-grid-inputs">
+          <div class="field">
+            <label for="simIPKNow">IPK saat ini</label>
+            <input type="number" id="simIPKNow" min="0" max="4" step="0.01" placeholder="cth: 3.20" />
+          </div>
+          <div class="field">
+            <label for="simSKSDone">Total SKS sudah ditempuh</label>
+            <input type="number" id="simSKSDone" min="0" step="1" placeholder="cth: 60" />
+          </div>
+          <div class="field">
+            <label for="simSKSNext">SKS semester depan</label>
+            <input type="number" id="simSKSNext" min="1" step="1" placeholder="cth: 20" />
+          </div>
+          <div class="field">
+            <label for="simIPKTarget">Target IPK</label>
+            <input type="number" id="simIPKTarget" min="0" max="4" step="0.01" placeholder="cth: 3.50" />
+          </div>
+        </div>
+        <div id="simResult"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     TOOL VIEW – SKALA NILAI  (#skala-nilai)
+============================================================ -->
+<div class="view" id="view-skala-nilai">
+  <div class="col">
+    <div class="page-header">
+      <h1 class="page-title">Skala Nilai</h1>
+    </div>
+    <div class="content">
+      <div class="card" style="margin-bottom:0">
+        <p class="scale-note">Perubahan langsung memengaruhi semua perhitungan.</p>
+        <div class="tbl-wrap">
+          <table id="scaleTable">
+            <thead>
+              <tr><th>Huruf</th><th>Poin (0–4)</th><th>Nilai Min (%)</th></tr>
+            </thead>
+            <tbody id="scaleBody"></tbody>
+          </table>
+        </div>
+        <div class="mt-2">
+          <button class="btn btn-ghost btn-sm" id="btnScaleReset">Kembalikan ke default ITS</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   STATE & CONSTANTS
+============================================================ */
+const DEFAULT_SCALE = [
+  { letter: 'A',  point: 4.0, minScore: 85 },
+  { letter: 'AB', point: 3.5, minScore: 80 },
+  { letter: 'B',  point: 3.0, minScore: 70 },
+  { letter: 'BC', point: 2.5, minScore: 65 },
+  { letter: 'C',  point: 2.0, minScore: 55 },
+  { letter: 'D',  point: 1.0, minScore: 40 },
+  { letter: 'E',  point: 0.0, minScore: 0  },
+];
+
+const DEFAULT_PASS_LETTER = 'C';
+const STORAGE_KEY = 'targetip_v1';
+
+// Cycling placeholder suggestions for component name (R1)
+const COMP_NAME_PLACEHOLDERS = [
+  'cth: Praktikum',
+  'cth: Presentasi',
+  'cth: Proyek',
+  'cth: Kuis 3',
+  'cth: Keaktifan',
+];
+
+// Default components for new courses (R2)
+const DEFAULT_COURSE_COMPONENTS = () => [
+  { id: nextCompId++, name: 'Tugas', weight: '10', score: '' },
+  { id: nextCompId++, name: 'Quiz',  weight: '10', score: '' },
+  { id: nextCompId++, name: 'ETS',   weight: '40', score: '' },
+  { id: nextCompId++, name: 'EAS',   weight: '40', score: '' },
+];
+
+// App state
+let state = {
+  courses:    [],
+  ipCourses:  [],   // manual-only extra courses in IP tab
+  ipOverrides: {},  // R6: courseId → letter string | null (null = auto)
+  sim: { ipkNow: '', sksDone: '', sksNext: '', ipkTarget: '' },
+  scale: DEFAULT_SCALE.map(r => ({ ...r })),
+};
+
+let nextCourseId = 1;
+let nextIpId     = 1;
+let nextCompId   = 1;
+
+/* ============================================================
+   STORAGE
+============================================================ */
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      courses: state.courses,
+      ipCourses: state.ipCourses,
+      ipOverrides: state.ipOverrides,
+      sim: state.sim,
+      scale: state.scale,
+      nextCourseId, nextIpId, nextCompId,
+    }));
+  } catch (e) { /* storage unavailable – continue */ }
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const p = JSON.parse(raw);
+    if (p.courses)      state.courses    = p.courses;
+    if (p.ipCourses)    state.ipCourses  = p.ipCourses;
+    // R6 migration: safe default if absent
+    if (p.ipOverrides)  state.ipOverrides = p.ipOverrides;
+    if (p.sim)          state.sim        = p.sim;
+    if (p.scale)        state.scale      = p.scale;
+    if (p.nextCourseId) nextCourseId     = p.nextCourseId;
+    if (p.nextIpId)     nextIpId         = p.nextIpId;
+    if (p.nextCompId)   nextCompId       = p.nextCompId;
+    // Migration: ensure each course has _estimates
+    for (const c of state.courses) {
+      if (!c._estimates) c._estimates = {};
+    }
+  } catch (e) { /* corrupted – start fresh */ }
+}
+
+/* ============================================================
+   CALCULATIONS
+============================================================ */
+
+/** Convert numeric final score → letter using current scale */
+function scoreToLetter(score) {
+  for (const row of state.scale) {
+    if (score >= row.minScore) return row.letter;
+  }
+  return state.scale[state.scale.length - 1].letter;
+}
+
+/** Get minScore for a letter */
+function letterToMinScore(letter) {
+  const row = state.scale.find(r => r.letter === letter);
+  return row ? row.minScore : 0;
+}
+
+/** Get point value for a letter */
+function letterToPoint(letter) {
+  const row = state.scale.find(r => r.letter === letter);
+  return row !== undefined ? row.point : 0;
+}
+
+/**
+ * Core course calculation.
+ * Returns { results, finalScore, allReleased, P, wU, Nmax }
+ * results[letter] = { min, status: 'impossible'|'safe'|'needed'|'released' }
+ */
+function calcCourse(course) {
+  const comps = course.components;
+
+  const released   = comps.filter(c => c.score !== '' && c.score !== null && c.score !== undefined);
+  const unreleased = comps.filter(c => c.score === '' || c.score === null || c.score === undefined);
+
+  const P  = released.reduce((s, c) => s + (parseFloat(c.weight) || 0) / 100 * parseFloat(c.score), 0);
+  const wU = unreleased.reduce((s, c) => s + (parseFloat(c.weight) || 0) / 100, 0);
+  const Nmax = P + 100 * wU;
+  const allReleased = wU === 0;
+
+  let finalScore = null;
+  if (allReleased) {
+    finalScore = comps.reduce((s, c) => s + (parseFloat(c.weight) || 0) / 100 * parseFloat(c.score), 0);
+  }
+
+  const results = {};
+  for (const row of state.scale) {
+    if (allReleased) {
+      results[row.letter] = { min: null, status: 'released' };
+    } else {
+      const min = (row.minScore - P) / wU;
+      const status = min > 100 ? 'impossible' : min <= 0 ? 'safe' : 'needed';
+      results[row.letter] = { min, status };
+    }
+  }
+
+  return { results, finalScore, allReleased, P, wU, Nmax };
+}
+
+/** Ceil to 1 decimal place (never round down) */
+function ceil1(v) {
+  return Math.ceil(v * 10) / 10;
+}
+
+/** Format a per-component minimum for display */
+function fmtPerComp(xk) {
+  if (xk <= 0)   return { type: 'safe',       text: 'Berapa pun nilainya, aman' };
+  if (xk > 100)  return { type: 'impossible', text: 'Tidak cukup sendirian, butuh komponen lain naik juga' };
+  return { type: 'needed', text: `Minimal ${ceil1(xk).toFixed(1)} (jika komponen sisa lain dapat 100)` };
+}
+
+/** Display name for a component (R1: fallback to "Komponen N") */
+function compDisplayName(comp, idx) {
+  return (comp.name && comp.name.trim()) ? comp.name.trim() : `Komponen ${idx + 1}`;
+}
+
+/** IP semester calculation */
+function calcIP(list) {
+  let totalPoints = 0, totalSKS = 0;
+  for (const c of list) {
+    const sks = parseFloat(c.sks);
+    const pt  = letterToPoint(c.letter);
+    if (!isNaN(sks) && sks > 0) {
+      totalPoints += sks * pt;
+      totalSKS    += sks;
+    }
+  }
+  if (totalSKS === 0) return null;
+  return totalPoints / totalSKS;
+}
+
+/** IPK simulator: IP needed = (target*(done+next) - now*done) / next */
+function calcIPNeeded(ipkNow, sksDone, sksNext, ipkTarget) {
+  if (sksNext === 0) return null;
+  return (ipkTarget * (sksDone + sksNext) - ipkNow * sksDone) / sksNext;
+}
+
+/** IP → closest letter by point */
+function ipToLetter(ip) {
+  let best = state.scale[state.scale.length - 1].letter;
+  for (const row of state.scale) {
+    if (ip >= row.point - 0.001) { best = row.letter; break; }
+  }
+  return best;
+}
+
+/* ============================================================
+   R6 – COURSE LETTER RESOLUTION
+============================================================ */
+
+/**
+ * Determine which letter to use for a course in the IP tab.
+ * Returns { letter, chipType, flag, flagText }
+ *   chipType: 'manual' | 'actual' | 'target'
+ *   flag: bool – whether an amber flag should appear
+ *   flagText: string label for the flag
+ */
+function resolveCourseLetterFull(course) {
+  const courseIdStr = String(course.id);
+  const override = state.ipOverrides[courseIdStr];
+
+  // a) Manual override
+  if (override != null) {
+    return { letter: override, chipType: 'manual', flag: false, flagText: '' };
+  }
+
+  const comps = course.components || [];
+  const totalW = comps.reduce((s, c) => s + (parseFloat(c.weight) || 0), 0);
+  const weightsOk = Math.abs(totalW - 100) < 0.01;
+
+  if (!weightsOk || comps.length === 0) {
+    // weights not valid → use target letter, flag it
+    const letter = course.passLetter || DEFAULT_PASS_LETTER;
+    return { letter, chipType: 'target', flag: true, flagText: 'Bobot belum 100%' };
+  }
+
+  const { allReleased, finalScore, P, wU, Nmax } = calcCourse(course);
+
+  // b) All released → actual final letter
+  if (allReleased) {
+    const letter = scoreToLetter(finalScore);
+    return { letter, chipType: 'actual', flag: false, flagText: '' };
+  }
+
+  // c) Target letter; check if reachable
+  const targetLetter = course.passLetter || DEFAULT_PASS_LETTER;
+  const Ntarget = letterToMinScore(targetLetter);
+  const isImpossible = Nmax < Ntarget;
+
+  if (isImpossible) {
+    // Use highest reachable letter
+    const bestRow = state.scale.find(r => Nmax >= r.minScore) || state.scale[state.scale.length - 1];
+    return {
+      letter: bestRow.letter,
+      chipType: 'target',
+      flag: true,
+      flagText: `Target tak tercapai – dipakai ${bestRow.letter}`,
+    };
+  }
+
+  return { letter: targetLetter, chipType: 'target', flag: false, flagText: '' };
+}
+
+/* ============================================================
+   HELPERS
+============================================================ */
+function uid() { return nextCompId++; }
+
+function clampInput(input, min, max) {
+  const v = parseFloat(input.value);
+  if (isNaN(v)) return;
+  if (v < min) input.value = min;
+  if (v > max) input.value = max;
+}
+
+function el(id) { return document.getElementById(id); }
+
+function makeSelect(options, value, cls) {
+  const s = document.createElement('select');
+  if (cls) s.className = cls;
+  for (const { val, label } of options) {
+    const o = document.createElement('option');
+    o.value = val; o.textContent = label;
+    if (String(val) === String(value)) o.selected = true;
+    s.appendChild(o);
+  }
+  return s;
+}
+
+function gradeOptions() {
+  return state.scale.map(r => ({ val: r.letter, label: r.letter }));
+}
+
+/* ============================================================
+   RENDER – FEATURE 1 (Minimum Score Calculator)
+============================================================ */
+function renderCourses() {
+  const container = el('courseList');
+  const empty     = el('courseEmpty');
+  container.innerHTML = '';
+  if (state.courses.length === 0) {
+    empty.style.display = 'block';
+    updateIPResult();  // R6: keep IP tab in sync
+    return;
+  }
+  empty.style.display = 'none';
+  for (const course of state.courses) {
+    container.appendChild(buildCourseCard(course));
+  }
+  updateIPResult();  // R6: keep IP tab in sync after full rebuild
+}
+
+function buildCourseCard(course) {
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.dataset.courseId = course.id;
+
+  // ---- Header ----
+  const header = document.createElement('div');
+  header.className = 'course-header';
+
+  const nameInp = document.createElement('input');
+  nameInp.type = 'text';
+  nameInp.className = 'course-name-input';
+  nameInp.value = course.name;
+  nameInp.placeholder = 'Nama MK';
+  nameInp.setAttribute('aria-label', 'Nama mata kuliah');
+  nameInp.addEventListener('input', () => { course.name = nameInp.value; saveState(); });
+
+  const sksWrap = document.createElement('div');
+  sksWrap.className = 'sks-inline';
+  const sksLbl = document.createElement('span');
+  sksLbl.textContent = 'SKS:';
+  const sksInp = document.createElement('input');
+  sksInp.type = 'number';
+  sksInp.min = '1'; sksInp.max = '6'; sksInp.step = '1';
+  sksInp.value = course.sks;
+  sksInp.setAttribute('aria-label', 'SKS');
+  sksInp.addEventListener('input', () => { clampInput(sksInp, 1, 6); course.sks = sksInp.value; saveState(); });
+  sksWrap.append(sksLbl, sksInp);
+
+  const delBtn = document.createElement('button');
+  delBtn.className = 'btn btn-danger btn-xs';
+  delBtn.setAttribute('aria-label', `Hapus ${course.name}`);
+  delBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2 4h12M6 4V2h4v2M5 4l1 10h4l1-10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg> Hapus`;
+  delBtn.addEventListener('click', () => {
+    if (confirm(`Hapus mata kuliah "${course.name || 'ini'}"?`)) {
+      state.courses = state.courses.filter(c => c.id !== course.id);
+      saveState(); renderCourses();
+    }
+  });
+
+  header.append(nameInp, sksWrap, delBtn);
+  card.appendChild(header);
+
+  // ---- Target row ----
+  const targetRow = document.createElement('div');
+  targetRow.className = 'target-row';
+  const targetLbl = document.createElement('label');
+  targetLbl.textContent = 'Target nilai:';
+  targetLbl.setAttribute('for', `target-${course.id}`);
+  const targetSel = makeSelect(gradeOptions(), course.passLetter || DEFAULT_PASS_LETTER, 'tbl-inp');
+  targetSel.id = `target-${course.id}`;
+  targetSel.style.width = 'auto';
+  targetSel.addEventListener('change', () => {
+    course.passLetter = targetSel.value;
+    saveState();
+    updateCourseResult(card, course);
+  });
+  targetRow.append(targetLbl, targetSel);
+  card.appendChild(targetRow);
+
+  // ---- Component header ----
+  const compHdr = document.createElement('div');
+  compHdr.className = 'comp-grid-header';
+  compHdr.innerHTML = '<span>Komponen</span><span>Bobot %</span><span>Nilai</span><span></span>';
+  card.appendChild(compHdr);
+
+  // ---- Component list ----
+  const compList = document.createElement('div');
+  compList.dataset.compList = course.id;
+  for (const comp of course.components) {
+    compList.appendChild(buildCompRow(course, comp, compList, card));
+  }
+  card.appendChild(compList);
+
+  // ---- Weight progress bar ----
+  const wtWrap = document.createElement('div');
+  wtWrap.className = 'weight-bar-wrap';
+  wtWrap.dataset.wtFor = course.id;
+  card.appendChild(wtWrap);
+  updateWeightBar(wtWrap, course);
+
+  // ---- Add component button ----
+  const addCompBtn = document.createElement('button');
+  addCompBtn.className = 'btn btn-ghost btn-sm mt-1';
+  addCompBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg> Tambah Komponen`;
+  addCompBtn.addEventListener('click', () => {
+    // R1: count how many user-added comps exist (beyond default 4) to cycle placeholder
+    const addedCount = course.components.length;
+    const placeholderIdx = addedCount % COMP_NAME_PLACEHOLDERS.length;
+    // R1: empty name, empty weight, empty score
+    const comp = { id: uid(), name: '', weight: '', score: '', _placeholderIdx: placeholderIdx };
+    course.components.push(comp);
+    const newRow = buildCompRow(course, comp, compList, card);
+    compList.appendChild(newRow);
+    // R1: auto-focus name input
+    const nameInput = newRow.querySelector('input[type="text"]');
+    if (nameInput) setTimeout(() => nameInput.focus(), 0);
+    updateWeightBar(wtWrap, course);
+    updateCourseResult(card, course);
+    saveState();
+  });
+  card.appendChild(addCompBtn);
+
+  // ---- Result area ----
+  const resultDiv = document.createElement('div');
+  resultDiv.className = 'course-result';
+  card.appendChild(resultDiv);
+  updateCourseResult(card, course);
+
+  return card;
+}
+
+function buildCompRow(course, comp, compList, card) {
+  const row = document.createElement('div');
+  row.className = 'comp-grid';
+  row.dataset.compId = comp.id;
+
+  // R1: placeholder cycles; pick from comp or derive from current index
+  const phIdx = (comp._placeholderIdx !== undefined)
+    ? comp._placeholderIdx
+    : (course.components.indexOf(comp) % COMP_NAME_PLACEHOLDERS.length);
+  const namePh = COMP_NAME_PLACEHOLDERS[phIdx];
+
+  const nameInp = document.createElement('input');
+  nameInp.type = 'text';
+  nameInp.className = 'tbl-inp';
+  nameInp.value = comp.name;          // R1: could be '' (empty)
+  nameInp.placeholder = namePh;
+  nameInp.setAttribute('aria-label', 'Nama komponen');
+
+  const weightInp = document.createElement('input');
+  weightInp.type = 'number';
+  weightInp.className = 'tbl-inp';
+  weightInp.value = comp.weight;      // R1: could be ''
+  weightInp.placeholder = 'cth: 10'; // R1: specified placeholder
+  weightInp.min = '0'; weightInp.max = '100';
+  weightInp.setAttribute('aria-label', 'Bobot persen');
+
+  const scoreInp = document.createElement('input');
+  scoreInp.type = 'number';
+  scoreInp.className = 'tbl-inp';
+  scoreInp.value = comp.score;
+  scoreInp.placeholder = 'Kosong = belum keluar'; // R1: specified placeholder
+  scoreInp.min = '0'; scoreInp.max = '100';
+  scoreInp.setAttribute('aria-label', 'Nilai (kosongkan jika belum keluar)');
+
+  const delBtn = document.createElement('button');
+  delBtn.className = 'btn btn-danger btn-xs';
+  delBtn.style.padding = '.22rem .4rem';
+  delBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>`;
+  delBtn.setAttribute('aria-label', 'Hapus komponen');
+
+  // Wire → state
+  nameInp.addEventListener('input', () => {
+    comp.name = nameInp.value;
+    // R3: update result display (names used in per-component section)
+    updateCourseResult(card, course);
+    saveState();
+  });
+  weightInp.addEventListener('input', () => {
+    const v = parseFloat(weightInp.value);
+    if (!isNaN(v) && (v < 0 || v > 100)) weightInp.value = Math.max(0, Math.min(100, v));
+    comp.weight = weightInp.value;
+    const wtWrap = card.querySelector('.weight-bar-wrap');
+    if (wtWrap) updateWeightBar(wtWrap, course);
+    updateCourseResult(card, course);
+    saveState();
+  });
+  scoreInp.addEventListener('input', () => {
+    const v = parseFloat(scoreInp.value);
+    if (!isNaN(v) && (v < 0 || v > 100)) scoreInp.value = Math.max(0, Math.min(100, v));
+    comp.score = scoreInp.value;
+    updateCourseResult(card, course);
+    saveState();
+  });
+  delBtn.addEventListener('click', () => {
+    course.components = course.components.filter(c => c.id !== comp.id);
+    row.remove();
+    const wtWrap = card.querySelector('.weight-bar-wrap');
+    if (wtWrap) updateWeightBar(wtWrap, course);
+    updateCourseResult(card, course);
+    saveState();
+  });
+
+  row.append(nameInp, weightInp, scoreInp, delBtn);
+  return row;
+}
+
+function updateWeightBar(wrap, course) {
+  const total   = course.components.reduce((s, c) => s + (parseFloat(c.weight) || 0), 0);
+  const rounded = Math.round(total * 100) / 100;
+  const pct     = Math.min(100, rounded);
+  const isOk    = Math.abs(rounded - 100) < 0.01;
+
+  wrap.innerHTML = `
+    <div class="weight-bar-label">
+      <span>Total bobot</span>
+      <span class="wb-val ${isOk ? 'ok' : 'warn'}">${rounded}%</span>
+    </div>
+    <div class="weight-bar-track">
+      <div class="weight-bar-fill ${isOk ? 'ok' : ''}" style="width:${pct}%"></div>
+    </div>`;
+}
+
+/* ============================================================
+   RESULT + ANALISIS PANEL (R3)
+============================================================ */
+function updateCourseResult(card, course) {
+  const resultDiv = card.querySelector('.course-result');
+  if (!resultDiv) return;
+  resultDiv.innerHTML = '';
+
+  const comps = course.components;
+  if (comps.length === 0) {
+    updateIPResult(); // R6: sync even when no components
+    return;
+  }
+
+  const totalW = comps.reduce((s, c) => s + (parseFloat(c.weight) || 0), 0);
+  if (Math.abs(totalW - 100) >= 0.01) {
+    const a = div('alert alert-warn', '⚠ Total bobot harus 100% sebelum hasil dapat dihitung.');
+    resultDiv.appendChild(a);
+    return;
+  }
+
+  const { results, finalScore, allReleased, P, wU, Nmax } = calcCourse(course);
+  const targetLetter = course.passLetter || DEFAULT_PASS_LETTER;
+
+  // ---- All released: show final score ----
+  if (allReleased) {
+    const letter = scoreToLetter(finalScore);
+    const a = div('alert alert-success');
+    a.innerHTML = `Semua komponen sudah keluar. Nilai akhir: <strong>${finalScore.toFixed(2)}</strong> &rarr; <strong>${letter}</strong>`;
+    resultDiv.appendChild(a);
+    // Per-letter strip
+    resultDiv.appendChild(buildGradeStrip(results, targetLetter, true, finalScore));
+    updateIPResult(); // R6: actual letter may have changed
+    return;
+  }
+
+  // ---- Target result ----
+  const r = results[targetLetter];
+  if (r) {
+    const a = document.createElement('div');
+    if (r.status === 'impossible') {
+      a.className = 'alert alert-danger';
+      a.innerHTML = `Target <strong>${targetLetter}</strong> tidak dapat dicapai — nilai maksimalmu (${Nmax.toFixed(1)}) tidak cukup.`;
+    } else if (r.status === 'safe') {
+      a.className = 'alert alert-success';
+      a.innerHTML = `Target <strong>${targetLetter}</strong> sudah pasti aman, apapun nilaimu di komponen tersisa.`;
+    } else {
+      a.className = 'alert alert-info';
+      a.innerHTML = `Kamu butuh rata-rata minimal <strong>${ceil1(r.min).toFixed(1)}</strong> di komponen yang belum keluar untuk mencapai <strong>${targetLetter}</strong>.`;
+    }
+    resultDiv.appendChild(a);
+  }
+
+  // Per-letter strip
+  resultDiv.appendChild(buildGradeStrip(results, targetLetter, false, null));
+
+  // ---- Analisis panel (R3) ----
+  const unreleased = comps.filter(c => c.score === '' || c.score === null || c.score === undefined);
+  if (unreleased.length > 0) {
+    resultDiv.appendChild(buildAnalisisPanel(course, comps, unreleased, P, wU, Nmax, targetLetter));
+  }
+  updateIPResult(); // R6: reachability may have changed
+}
+
+function div(cls, text) {
+  const d = document.createElement('div');
+  d.className = cls;
+  if (text !== undefined) d.textContent = text;
+  return d;
+}
+
+function buildGradeStrip(results, targetLetter, allReleased, finalScore) {
+  const wrap = document.createElement('div');
+  wrap.style.marginTop = '.5rem';
+  const lbl = div('text-muted', 'Nilai minimum per huruf:');
+  lbl.style.fontSize = '.72rem';
+  lbl.style.marginBottom = '.3rem';
+  wrap.appendChild(lbl);
+
+  const strip = document.createElement('div');
+  strip.className = 'grade-strip';
+
+  for (const row of state.scale) {
+    const chip = document.createElement('div');
+    chip.className = 'grade-chip';
+
+    const letterEl = document.createElement('div');
+    letterEl.className = 'gc-letter';
+    letterEl.textContent = row.letter;
+
+    const valEl = document.createElement('div');
+    valEl.className = 'gc-val';
+
+    if (allReleased) {
+      const earned = scoreToLetter(finalScore);
+      if (earned === row.letter) {
+        chip.classList.add('reachable');
+        valEl.textContent = 'Dicapai';
+      } else {
+        chip.classList.add('unreachable');
+        valEl.textContent = '–';
+      }
+    } else {
+      const r = results[row.letter];
+      if (r.status === 'safe') {
+        chip.classList.add('reachable');
+        valEl.textContent = 'Aman';
+      } else if (r.status === 'impossible') {
+        chip.classList.add('unreachable');
+        valEl.textContent = '✕';
+      } else {
+        chip.classList.add('reachable');
+        valEl.textContent = ceil1(r.min).toFixed(1);
+      }
+    }
+    if (row.letter === targetLetter) chip.classList.add('target-chip');
+    chip.append(letterEl, valEl);
+    strip.appendChild(chip);
+  }
+
+  wrap.appendChild(strip);
+  return wrap;
+}
+
+/**
+ * Build the R3 "Analisis Target" panel.
+ * @param {object} course
+ * @param {array}  comps       all components
+ * @param {array}  unreleased  unreleased components
+ * @param {number} P           sum of released contributions
+ * @param {number} wU          sum of unreleased weights / 100
+ * @param {number} Nmax        max possible final score
+ * @param {string} targetLetter
+ */
+function buildAnalisisPanel(course, comps, unreleased, P, wU, Nmax, targetLetter) {
+  const Ntarget = letterToMinScore(targetLetter);
+  const panel   = div('analisis-panel');
+  const isImpossible = Nmax < Ntarget;
+
+  // Retrieve or initialise the per-course estimations map (not persisted, UI-only)
+  if (!course._estimates) course._estimates = {};
+
+  // ---- SECTION 1: STATUS ----
+  {
+    const s = div('analisis-block');
+    const t = div('analisis-section-title', 'Status sejauh ini');
+    s.appendChild(t);
+
+    const highestReachable = state.scale.find(r => Nmax >= r.minScore);
+    const hrLetter = highestReachable ? highestReachable.letter : state.scale[state.scale.length - 1].letter;
+
+    const statusLines = [
+      `Nilai terkumpul: <strong>${P.toFixed(2)}</strong>`,
+      `Nilai maksimum yang bisa diraih: <strong>${Nmax.toFixed(1)}</strong>`,
+      `Huruf tertinggi masih bisa diraih: <strong>${hrLetter}</strong>`,
+    ];
+
+    const alertCls = isImpossible ? 'alert alert-danger' : 'alert alert-neutral';
+    const statusAlert = div(alertCls);
+    statusAlert.innerHTML = statusLines.join('<br>');
+    s.appendChild(statusAlert);
+
+    if (isImpossible) {
+      const aImp = div('alert alert-warn');
+      const uniform = wU > 0 ? ceil1((highestReachable.minScore - P) / wU).toFixed(1) : '–';
+      aImp.innerHTML = `Target <strong>${targetLetter}</strong> tidak bisa dicapai. Untuk <strong>${hrLetter}</strong> kamu butuh rata-rata <strong>${uniform}</strong> di komponen tersisa.`;
+      s.appendChild(aImp);
+    }
+    panel.appendChild(s);
+  }
+
+  // If impossible, still show the rest with adjusted target = highest reachable
+  const effectiveLetter = isImpossible
+    ? (state.scale.find(r => Nmax >= r.minScore) || state.scale[state.scale.length - 1]).letter
+    : targetLetter;
+  const Neff = letterToMinScore(effectiveLetter);
+
+  // ---- SECTION 2: SKENARIO MERATA ----
+  if (wU > 0) {
+    const s = div('analisis-block');
+    s.appendChild(div('analisis-section-title', 'Skenario merata'));
+
+    const X = (Neff - P) / wU;
+    const Xd = div('');
+    if (X <= 0) {
+      Xd.className = 'alert alert-success';
+      Xd.innerHTML = `Kalau semua komponen tersisa dapat nilai sama, <strong>berapa pun aman</strong> untuk ${effectiveLetter}.`;
+    } else if (X > 100) {
+      Xd.className = 'alert alert-danger';
+      Xd.textContent = `Target ${effectiveLetter} tidak bisa dicapai bahkan dengan 100 di semua komponen tersisa.`;
+    } else {
+      Xd.className = 'alert alert-info';
+      Xd.innerHTML = `Kalau semua komponen tersisa dapat nilai sama, masing-masing minimal <strong>${ceil1(X).toFixed(1)}</strong> untuk ${effectiveLetter}.`;
+    }
+    s.appendChild(Xd);
+    panel.appendChild(s);
+  }
+
+  // ---- SECTION 3: PER KOMPONEN ----
+  if (unreleased.length > 1) {
+    const s = div('analisis-block');
+    s.appendChild(div('analisis-section-title', 'Per komponen (jika komponen lain 100)'));
+
+    // Sort by weight descending
+    const sortedU = [...unreleased].sort((a, b) => (parseFloat(b.weight) || 0) - (parseFloat(a.weight) || 0));
+    const ul = document.createElement('ul');
+    ul.className = 'per-comp-list';
+
+    sortedU.forEach((ck, i) => {
+      const wk  = (parseFloat(ck.weight) || 0) / 100;
+      const xk  = wk > 0 ? (Neff - P - 100 * (wU - wk)) / wk : Infinity;
+      const fmt = fmtPerComp(xk);
+
+      const li = document.createElement('li');
+      const idx = comps.indexOf(ck);
+      const cname = compDisplayName(ck, idx >= 0 ? idx : i);
+
+      const nameSpan = div('pco-name', cname);
+
+      const resultSpan = div('pco-result');
+      if (fmt.type === 'safe')       resultSpan.classList.add('safe');
+      if (fmt.type === 'impossible') resultSpan.classList.add('impossible');
+      resultSpan.innerHTML = fmt.text;
+
+      li.appendChild(nameSpan);
+      if (i === 0) {
+        const tag = div('pco-tag', 'paling berpengaruh');
+        li.appendChild(tag);
+      }
+      li.appendChild(resultSpan);
+      ul.appendChild(li);
+    });
+    s.appendChild(ul);
+    panel.appendChild(s);
+  }
+
+  // ---- SECTION 4: SIMULASI (estimasi) ----
+  {
+    const s = div('analisis-block');
+    s.appendChild(div('analisis-section-title', 'Simulasi estimasi'));
+
+    const note = div('text-muted', 'Isi estimasi untuk melihat dampaknya. Tidak disimpan sebagai nilai asli.');
+    note.style.fontSize = '.75rem';
+    note.style.marginBottom = '.5rem';
+    s.appendChild(note);
+
+    const grid = div('sim-est-grid');
+
+    unreleased.forEach((ck, i) => {
+      const idx   = comps.indexOf(ck);
+      const cname = compDisplayName(ck, idx >= 0 ? idx : i);
+
+      const item = div('sim-est-item field');
+      item.style.marginBottom = '0';
+
+      const lbl = document.createElement('label');
+      lbl.textContent = `Estimasi: ${cname}`;
+
+      const inp = document.createElement('input');
+      inp.type  = 'number';
+      inp.className = 'tbl-inp est-input';
+      inp.placeholder = 'cth: 80';
+      inp.min = '0'; inp.max = '100';
+      const estKey = String(ck.id);
+      inp.value = course._estimates[estKey] !== undefined ? course._estimates[estKey] : '';
+
+      inp.addEventListener('input', () => {
+        clampInput(inp, 0, 100);
+        if (inp.value === '') {
+          delete course._estimates[estKey];
+        } else {
+          course._estimates[estKey] = inp.value;
+        }
+        // Recompute the sim result block
+        updateSimEstResult(s, course, comps, unreleased, P, wU, Neff, effectiveLetter);
+      });
+
+      item.append(lbl, inp);
+      grid.appendChild(item);
+    });
+    s.appendChild(grid);
+
+    // Result placeholder for sim
+    const simRes = div('');
+    simRes.dataset.simResFor = course.id;
+    s.appendChild(simRes);
+    updateSimEstResult(s, course, comps, unreleased, P, wU, Neff, effectiveLetter);
+
+    panel.appendChild(s);
+  }
+
+  return panel;
+}
+
+/** Recompute simulation result inside the analisis panel */
+function updateSimEstResult(section, course, comps, unreleased, P, wU, Ntarget, targetLetter) {
+  const estimates  = course._estimates || {};
+  const simRes     = section.querySelector('[data-sim-res-for]');
+  if (!simRes) return;
+  simRes.innerHTML = '';
+
+  // Split unreleased into estimated vs still-unknown
+  const estimated     = unreleased.filter(c => estimates[String(c.id)] !== undefined);
+  const stillUnknown  = unreleased.filter(c => estimates[String(c.id)] === undefined);
+
+  if (estimated.length === 0) return; // nothing filled yet
+
+  // Compute adjusted P with estimates treated as released
+  const P2  = P + estimated.reduce((s, c) => s + (parseFloat(c.weight) || 0) / 100 * parseFloat(estimates[String(c.id)]), 0);
+  const wU2 = stillUnknown.reduce((s, c) => s + (parseFloat(c.weight) || 0) / 100, 0);
+  const Nmax2 = P2 + 100 * wU2;
+
+  // Names of estimated comps
+  const estNames = estimated.map((c, i) => {
+    const idx = comps.indexOf(c);
+    return compDisplayName(c, idx >= 0 ? idx : i);
+  }).join(', ');
+
+  if (stillUnknown.length === 0) {
+    // All estimated
+    const final = P2;
+    const letter = scoreToLetter(final);
+    const a = div(final >= Ntarget ? 'alert alert-success' : 'alert alert-danger');
+    a.innerHTML = `Dengan semua estimasi ini, nilai akhir sekitar <strong>${final.toFixed(2)}</strong> → <strong>${letter}</strong>.`;
+    simRes.appendChild(a);
+    return;
+  }
+
+  if (Nmax2 < Ntarget) {
+    const a = div('alert alert-danger');
+    a.innerHTML = `Dengan estimasi ini, target <strong>${targetLetter}</strong> sudah tidak bisa dicapai (maks ${Nmax2.toFixed(1)}).`;
+    simRes.appendChild(a);
+    return;
+  }
+
+  const X2 = (Ntarget - P2) / wU2;
+  const a = div(X2 <= 0 ? 'alert alert-success' : 'alert alert-info');
+
+  if (X2 <= 0) {
+    a.innerHTML = `Dengan estimasi ${estNames}, target <strong>${targetLetter}</strong> sudah aman.`;
+  } else {
+    const names2 = stillUnknown.map((c, i) => {
+      const idx = comps.indexOf(c);
+      return compDisplayName(c, idx >= 0 ? idx : i);
+    }).join(', ');
+    a.innerHTML = `Kalau ${estNames} sesuai estimasi, komponen tersisa (<strong>${names2}</strong>) perlu rata-rata minimal <strong>${ceil1(X2).toFixed(1)}</strong> untuk ${targetLetter}.`;
+  }
+  simRes.appendChild(a);
+}
+
+/* ============================================================
+   RENDER – FEATURE 2 (IP Semester)  R6: linked + manual
+============================================================ */
+
+/** Render the manual-extra-courses list (unchanged logic) */
+function renderIPCourses() {
+  const container = el('ipCourseList');
+  container.innerHTML = '';
+  for (const c of state.ipCourses) container.appendChild(buildIPRow(c));
+  updateIPResult();
+}
+
+function buildIPRow(c) {
+  const row = document.createElement('div');
+  row.className = 'ip-course-row';
+
+  const nameInp = document.createElement('input');
+  nameInp.type = 'text'; nameInp.className = 'tbl-inp';
+  nameInp.value = c.name; nameInp.placeholder = 'Nama MK';
+  nameInp.setAttribute('aria-label', 'Nama mata kuliah');
+
+  const sksInp = document.createElement('input');
+  sksInp.type = 'number'; sksInp.className = 'tbl-inp';
+  sksInp.value = c.sks; sksInp.min = '1'; sksInp.max = '6'; sksInp.step = '1';
+  sksInp.placeholder = 'SKS'; sksInp.setAttribute('aria-label', 'SKS');
+
+  const gradeSel = makeSelect(gradeOptions(), c.letter, 'tbl-inp');
+  gradeSel.setAttribute('aria-label', 'Nilai huruf');
+
+  const delBtn = document.createElement('button');
+  delBtn.className = 'btn btn-danger btn-xs';
+  delBtn.style.padding = '.22rem .4rem';
+  delBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 16 16" fill="none"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>`;
+  delBtn.setAttribute('aria-label', 'Hapus');
+
+  nameInp.addEventListener('input', () => { c.name = nameInp.value; saveState(); updateIPResult(); });
+  sksInp.addEventListener('input', () => { clampInput(sksInp, 1, 6); c.sks = sksInp.value; saveState(); updateIPResult(); });
+  gradeSel.addEventListener('change', () => { c.letter = gradeSel.value; saveState(); updateIPResult(); });
+  delBtn.addEventListener('click', () => {
+    state.ipCourses = state.ipCourses.filter(x => x.id !== c.id);
+    row.remove(); saveState(); updateIPResult();
+  });
+
+  row.append(nameInp, sksInp, gradeSel, delBtn);
+  return row;
+}
+
+/** Build one linked-course row in the IP tab */
+function buildLinkedRow(course) {
+  const { letter, chipType, flag, flagText } = resolveCourseLetterFull(course);
+  const point = letterToPoint(letter);
+  const sks   = parseFloat(course.sks) || 0;
+  const courseIdStr = String(course.id);
+
+  const row = document.createElement('div');
+  row.className = 'ip-linked-row';
+
+  // ---- Name (clickable → jump to course) ----
+  const nameBtn = document.createElement('button');
+  nameBtn.className = 'ip-name-link';
+  nameBtn.textContent = course.name || `MK ${course.id}`;
+  nameBtn.title = 'Buka di tab Nilai Minimum';
+  nameBtn.addEventListener('click', () => {
+    navigate('nilai-minimum');
+    // Scroll to card after view switch
+    setTimeout(() => {
+      const card = document.querySelector(`[data-course-id="${course.id}"]`);
+      if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
+  });
+
+  // ---- SKS input ----
+  const sksInp = document.createElement('input');
+  sksInp.type = 'number'; sksInp.className = 'tbl-inp';
+  sksInp.value = course.sks; sksInp.min = '1'; sksInp.max = '12'; sksInp.step = '1';
+  sksInp.setAttribute('aria-label', `SKS ${course.name}`);
+  sksInp.addEventListener('input', () => {
+    clampInput(sksInp, 1, 12);
+    course.sks = sksInp.value;
+    saveState(); updateIPResult();
+  });
+
+  // ---- Letter dropdown (for manual override) ----
+  const gradeSel = makeSelect(gradeOptions(), letter, 'tbl-inp');
+  gradeSel.setAttribute('aria-label', `Nilai ${course.name}`);
+  gradeSel.addEventListener('change', () => {
+    state.ipOverrides[courseIdStr] = gradeSel.value;
+    saveState(); updateIPResult();
+  });
+
+  // ---- Chip + optional reset link ----
+  const chipWrap = document.createElement('div');
+  chipWrap.style.cssText = 'display:flex;flex-direction:column;gap:.2rem;';
+
+  const chipEl = document.createElement('span');
+  chipEl.className = `chip chip-${chipType}`;
+  chipEl.textContent = chipType === 'manual' ? 'Manual' : chipType === 'actual' ? 'Aktual' : 'Target';
+  chipWrap.appendChild(chipEl);
+
+  if (chipType === 'manual') {
+    const resetBtn = document.createElement('button');
+    resetBtn.className = 'reset-link';
+    resetBtn.textContent = 'reset';
+    resetBtn.setAttribute('aria-label', 'Kembali ke nilai otomatis');
+    resetBtn.addEventListener('click', () => {
+      delete state.ipOverrides[courseIdStr];
+      saveState(); updateIPResult();
+    });
+    chipWrap.appendChild(resetBtn);
+  }
+
+  if (flag) {
+    const flagEl = document.createElement('span');
+    flagEl.className = 'flag-impossible';
+    flagEl.innerHTML = `&#9888; ${flagText}`;
+    chipWrap.appendChild(flagEl);
+  }
+
+  // ---- Point display ----
+  const pointEl = document.createElement('span');
+  pointEl.style.cssText = 'font-size:.84rem;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;';
+  pointEl.textContent = point.toFixed(1);
+
+  row.append(nameBtn, sksInp, gradeSel, chipWrap, pointEl);
+  return row;
+}
+
+/** Main update for the IP tab: linked rows + predictions + IPK projection */
+function updateIPResult() {
+  // ---- Linked courses section ----
+  const linkedList  = el('ipLinkedList');
+  const linkedEmpty = el('ipLinkedEmpty');
+  const predDiv     = el('ipPredictions');
+  const projDiv     = el('ipkProjection');
+  if (!linkedList) return; // panel not in DOM yet
+
+  linkedList.innerHTML = '';
+  if (state.courses.length === 0) {
+    linkedEmpty.style.display = 'block';
+  } else {
+    linkedEmpty.style.display = 'none';
+    for (const course of state.courses) {
+      linkedList.appendChild(buildLinkedRow(course));
+    }
+  }
+
+  // ---- Build combined course list for IP calculation ----
+  // Two variants: target (optimistic) and realistic (impossible → best reachable)
+  const targetEntries   = []; // { sks, letter } for IP-target
+  const realisticEntries = []; // { sks, letter } for IP-realistic
+
+  for (const course of state.courses) {
+    const sks = parseFloat(course.sks) || 0;
+    if (sks <= 0) continue;
+
+    const courseIdStr = String(course.id);
+    const override = state.ipOverrides[courseIdStr];
+
+    // ---- Determine auto letter for both predictions ----
+    const comps  = course.components || [];
+    const totalW = comps.reduce((s, c) => s + (parseFloat(c.weight) || 0), 0);
+    const weightsOk = Math.abs(totalW - 100) < 0.01 && comps.length > 0;
+
+    let autoTargetLetter;    // "IP jika target tercapai": optimistic (declared target)
+    let autoRealisticLetter; // "IP realistis": best achievable given current state
+
+    if (!weightsOk) {
+      // Weights not valid: both fall back to declared pass letter
+      const pl = course.passLetter || DEFAULT_PASS_LETTER;
+      autoTargetLetter = pl;
+      autoRealisticLetter = pl;
+    } else {
+      const { allReleased, finalScore, Nmax } = calcCourse(course);
+      if (allReleased) {
+        // Actual score known — both use actual letter
+        const actual = scoreToLetter(finalScore);
+        autoTargetLetter   = actual;
+        autoRealisticLetter = actual;
+      } else {
+        const declaredTarget = course.passLetter || DEFAULT_PASS_LETTER;
+        const Ntarget = letterToMinScore(declaredTarget);
+        // Target prediction: use declared target letter (optimistic – assumes student achieves it)
+        autoTargetLetter = declaredTarget;
+        // Realistic prediction: if impossible, use best reachable
+        if (Nmax < Ntarget) {
+          const bestRow = state.scale.find(r => Nmax >= r.minScore) || state.scale[state.scale.length - 1];
+          autoRealisticLetter = bestRow.letter;
+        } else {
+          autoRealisticLetter = declaredTarget;
+        }
+      }
+    }
+
+    const finalTargetLetter   = override != null ? override : autoTargetLetter;
+    const finalRealisticLetter = override != null ? override : autoRealisticLetter;
+
+    targetEntries.push({ sks: course.sks, letter: finalTargetLetter });
+    realisticEntries.push({ sks: course.sks, letter: finalRealisticLetter });
+  }
+
+  // Include manual extra courses in both
+  for (const c of state.ipCourses) {
+    targetEntries.push({ sks: c.sks, letter: c.letter });
+    realisticEntries.push({ sks: c.sks, letter: c.letter });
+  }
+
+  const ipTarget   = calcIP(targetEntries);
+  const ipRealistic = calcIP(realisticEntries);
+  const totalSKS = targetEntries.reduce((s, c) => s + (parseFloat(c.sks) || 0), 0);
+
+  // ---- Render predictions ----
+  if (state.courses.length === 0 && state.ipCourses.length === 0) {
+    predDiv.innerHTML = '';
+    projDiv.innerHTML = '';
+    return;
+  }
+
+  if (totalSKS === 0) {
+    predDiv.innerHTML = '<div class="alert alert-warn" style="margin-top:.75rem;">Isi SKS dulu di setiap matkul.</div>';
+    projDiv.innerHTML = '';
+    return;
+  }
+
+  const fmtIP = v => v !== null ? v.toFixed(2) : '–';
+  const diffStr = () => {
+    if (ipTarget === null || ipRealistic === null) return '';
+    const d = ipTarget - ipRealistic;
+    if (Math.abs(d) < 0.005) return 'Kedua prediksi sama.';
+    return `Selisih ${d.toFixed(2)} poin dari nilai target.`;
+  };
+
+  predDiv.innerHTML = `
+    <div class="ip-pred-grid">
+      <div class="ip-pred-box primary">
+        <div class="ip-pred-label">Jika semua target tercapai</div>
+        <div class="ip-pred-val">${fmtIP(ipTarget)}</div>
+        <div class="ip-pred-sub">${ipTarget !== null ? 'setara ' + ipToLetter(ipTarget) : ''}</div>
+      </div>
+      <div class="ip-pred-box secondary">
+        <div class="ip-pred-label">IP Realistis</div>
+        <div class="ip-pred-val">${fmtIP(ipRealistic)}</div>
+        <div class="ip-pred-sub">${ipRealistic !== null ? 'setara ' + ipToLetter(ipRealistic) : ''}</div>
+      </div>
+    </div>
+    <div class="ip-summary-line">Total SKS: <strong>${totalSKS}</strong> &nbsp;·&nbsp; ${diffStr()}</div>`;
+
+  // ---- IPK projection (Part C) ----
+  const vN = parseFloat(state.sim.ipkNow);
+  const vD = parseFloat(state.sim.sksDone);
+  if (!isNaN(vN) && !isNaN(vD) && vD >= 0 && ipTarget !== null) {
+    const sSem = totalSKS;
+    const projIPK = (vN * vD + ipTarget * sSem) / (vD + sSem);
+    projDiv.innerHTML = `
+      <div class="ipk-proj-box">
+        <div class="ipk-proj-label">Prediksi IPK setelah semester ini</div>
+        <span class="ipk-proj-val">${projIPK.toFixed(2)}</span>
+        <span class="ipk-proj-hint" style="margin-left:.5rem;">(IPK ${vN.toFixed(2)}, ${vD} SKS + ${sSem} SKS semester ini)</span>
+        <div style="margin-top:.5rem;">
+          <button class="btn btn-ghost btn-sm" id="btnFillSKSSem">Pakai di Simulasi IPK</button>
+        </div>
+      </div>`;
+    // Wire the button
+    const btn = el('btnFillSKSSem');
+    if (btn) {
+      btn.addEventListener('click', () => {
+        state.sim.sksNext = String(sSem);
+        saveState();
+        navigate('simulasi-ipk');
+        const sksNextInp = el('simSKSNext');
+        if (sksNextInp) { sksNextInp.value = sSem; }
+        updateSimResult();
+      });
+    }
+  } else {
+    projDiv.innerHTML = `
+      <div class="ipk-proj-box">
+        <div class="ipk-proj-label">Prediksi IPK setelah semester ini</div>
+        <div class="ipk-proj-hint">Isi IPK saat ini dan total SKS di tab Simulasi IPK untuk melihat proyeksi IPK.</div>
+      </div>`;
+  }
+}
+
+/* ============================================================
+   RENDER – FEATURE 3 (IPK Simulator)
+============================================================ */
+function bindSimInputs() {
+  const fields = [
+    ['simIPKNow',    'ipkNow',    0, 4   ],
+    ['simSKSDone',   'sksDone',   0, 999 ],
+    ['simSKSNext',   'sksNext',   1, 50  ],
+    ['simIPKTarget', 'ipkTarget', 0, 4   ],
+  ];
+  for (const [id, key, min, max] of fields) {
+    const inp = el(id);
+    if (!inp) continue;
+    inp.value = state.sim[key] || '';
+    inp.addEventListener('input', () => {
+      clampInput(inp, min, max);
+      state.sim[key] = inp.value;
+      saveState(); updateSimResult();
+      updateIPResult(); // R6: Part C reads ipkNow/sksDone
+    });
+  }
+}
+
+function updateSimResult() {
+  const d = el('simResult');
+  const { ipkNow, sksDone, sksNext, ipkTarget } = state.sim;
+  const vN = parseFloat(ipkNow), vD = parseFloat(sksDone),
+        vX = parseFloat(sksNext), vT = parseFloat(ipkTarget);
+  if ([vN, vD, vX, vT].some(isNaN) || vX <= 0) { d.innerHTML = ''; return; }
+
+  const needed = calcIPNeeded(vN, vD, vX, vT);
+  let html;
+  if (needed > 4.0) {
+    html = `<div class="alert alert-danger">Target IPK ${vT.toFixed(2)} <strong>tidak realistis semester ini</strong> — IP yang dibutuhkan (${needed.toFixed(2)}) melebihi 4.0.</div>`;
+  } else if (needed < 0) {
+    html = `<div class="alert alert-success">Target IPK ${vT.toFixed(2)} <strong>sudah tercapai</strong> — tidak ada tekanan semester ini.</div>`;
+  } else {
+    const letter = ipToLetter(needed);
+    html = `<div class="sim-result-box">
+      <div class="sim-val">${needed.toFixed(2)}</div>
+      <div class="sim-label">IP minimum dibutuhkan semester ini (≈ <strong>${letter}</strong>)</div>
+    </div>`;
+  }
+  d.innerHTML = html;
+}
+
+/* ============================================================
+   RENDER – FEATURE 4 (Grade Scale Editor)
+============================================================ */
+function renderScaleTable() {
+  const tbody = el('scaleBody');
+  tbody.innerHTML = '';
+  for (const row of state.scale) {
+    const tr = document.createElement('tr');
+
+    const tdL = document.createElement('td');
+    tdL.innerHTML = `<strong style="color:var(--green)">${row.letter}</strong>`;
+
+    const tdP = document.createElement('td');
+    const ptI = document.createElement('input');
+    ptI.type = 'number'; ptI.className = 'tbl-inp';
+    ptI.value = row.point; ptI.min = '0'; ptI.max = '4'; ptI.step = '0.5';
+    ptI.setAttribute('aria-label', `Poin ${row.letter}`);
+    ptI.addEventListener('input', () => {
+      clampInput(ptI, 0, 4);
+      row.point = parseFloat(ptI.value) || 0;
+      saveState(); updateIPResult(); updateSimResult();
+    });
+    tdP.appendChild(ptI);
+
+    const tdM = document.createElement('td');
+    const minI = document.createElement('input');
+    minI.type = 'number'; minI.className = 'tbl-inp';
+    minI.value = row.minScore; minI.min = '0'; minI.max = '100'; minI.step = '1';
+    minI.setAttribute('aria-label', `Nilai min ${row.letter}`);
+    minI.addEventListener('input', () => {
+      clampInput(minI, 0, 100);
+      row.minScore = parseFloat(minI.value) || 0;
+      saveState(); renderCourses();
+    });
+    tdM.appendChild(minI);
+
+    tr.append(tdL, tdP, tdM);
+    tbody.appendChild(tr);
+  }
+}
+
+/* ============================================================
+   HASH ROUTER  (R5)
+============================================================ */
+
+// Valid hash → view-id mapping
+const VIEWS = {
+  'home':          'view-home',
+  'nilai-minimum': 'view-nilai-minimum',
+  'ip-semester':   'view-ip-semester',
+  'simulasi-ipk':  'view-simulasi-ipk',
+  'skala-nilai':   'view-skala-nilai',
+};
+
+/**
+ * Navigate to a view by hash name (without #).
+ * Updates history, switches active view, updates nav active state.
+ */
+function navigate(viewName, pushHistory) {
+  const targetId = VIEWS[viewName] || 'view-home';
+  const resolvedName = VIEWS[viewName] ? viewName : 'home';
+
+  // Toggle views
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  const target = document.getElementById(targetId);
+  if (target) target.classList.add('active');
+
+  // Update nav-link active states
+  document.querySelectorAll('.nav-link').forEach(a => {
+    a.classList.toggle('active', a.dataset.view === resolvedName);
+    a.setAttribute('aria-current', a.dataset.view === resolvedName ? 'page' : 'false');
+  });
+
+  // Push/replace history (avoid duplicate entries)
+  const newHash = '#' + resolvedName;
+  if (pushHistory !== false && location.hash !== newHash) {
+    history.pushState({ view: resolvedName }, '', newHash);
+  }
+
+  // Scroll to top on view change
+  window.scrollTo({ top: 0, behavior: 'instant' });
+}
+
+function initRouter() {
+  // Handle anchor <a> clicks for nav links and feature cards
+  document.addEventListener('click', e => {
+    const a = e.target.closest('a[href^="#"]');
+    if (a) {
+      const hash = a.getAttribute('href').replace('#', '');
+      if (hash === 'features') {
+        // Smooth-scroll to features section on landing
+        e.preventDefault();
+        const feat = document.getElementById('features');
+        if (feat) feat.scrollIntoView({ behavior: 'smooth' });
+        return;
+      }
+      if (VIEWS[hash]) {
+        e.preventDefault();
+        navigate(hash);
+      }
+    }
+    // Feature-card links and any data-goto buttons
+    const btn = e.target.closest('[data-goto]');
+    if (btn) {
+      e.preventDefault();
+      navigate(btn.dataset.goto);
+    }
+  });
+
+  // Browser back/forward
+  window.addEventListener('popstate', e => {
+    const viewName = (e.state && e.state.view) || 'home';
+    navigate(viewName, false);
+  });
+
+  // Initial load
+  const initialHash = location.hash.replace('#', '') || 'home';
+  navigate(VIEWS[initialHash] ? initialHash : 'home', false);
+  // Replace state so popstate carries view name
+  history.replaceState({ view: VIEWS[initialHash] ? initialHash : 'home' }, '', '#' + (VIEWS[initialHash] ? initialHash : 'home'));
+}
+
+/* ============================================================
+   RESET
+============================================================ */
+function initReset() {
+  el('btnReset').addEventListener('click', () => {
+    if (confirm('Reset semua data? Tindakan ini tidak dapat dibatalkan.')) {
+      try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
+      state = {
+        courses:     [],
+        ipCourses:   [],
+        ipOverrides: {},
+        sim: { ipkNow: '', sksDone: '', sksNext: '', ipkTarget: '' },
+        scale: DEFAULT_SCALE.map(r => ({ ...r })),
+      };
+      nextCourseId = 1; nextIpId = 1; nextCompId = 1;
+      renderAll();
+    }
+  });
+}
+
+/* ============================================================
+   ADD BUTTONS
+============================================================ */
+function initAddButtons() {
+  el('btnAddCourse').addEventListener('click', () => {
+    // R2: default components with empty scores
+    const course = {
+      id: nextCourseId++,
+      name: `Mata Kuliah ${nextCourseId - 1}`,
+      sks: 3,
+      passLetter: DEFAULT_PASS_LETTER,
+      components: DEFAULT_COURSE_COMPONENTS(),
+      _estimates: {},
+    };
+    state.courses.push(course);
+    saveState();
+    renderCourses();
+    const cards = document.querySelectorAll('#courseList .card');
+    if (cards.length) cards[cards.length - 1].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
+
+  el('btnAddIpCourse').addEventListener('click', () => {
+    const c = { id: nextIpId++, name: '', sks: 3, letter: state.scale[0].letter };
+    state.ipCourses.push(c);
+    saveState();
+    const row = buildIPRow(c);
+    el('ipCourseList').appendChild(row);
+    updateIPResult();
+    row.querySelector('input[type="text"]').focus();
+  });
+
+  el('btnScaleReset').addEventListener('click', () => {
+    if (confirm('Kembalikan skala nilai ke default ITS?')) {
+      state.scale = DEFAULT_SCALE.map(r => ({ ...r }));
+      saveState(); renderScaleTable(); renderCourses();
+      updateIPResult(); updateSimResult();
+    }
+  });
+}
+
+/* ============================================================
+   RENDER ALL
+============================================================ */
+function renderAll() {
+  renderCourses();
+  renderIPCourses();
+  bindSimInputs();
+  updateSimResult();
+  renderScaleTable();
+}
+
+/* ============================================================
+   BOOTSTRAP
+============================================================ */
+(function init() {
+  loadState();
+  initRouter();
+  initReset();
+  initAddButtons();
+  renderAll();
+})();
+</script>
+</body>
+</html>
