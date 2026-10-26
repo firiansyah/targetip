@@ -882,11 +882,12 @@
         <div class="tbl-wrap">
           <table id="scaleTable">
             <thead>
-              <tr><th>Huruf</th><th>Poin (0–4)</th><th>Nilai Min (%)</th></tr>
+              <tr><th>Huruf</th><th>Poin (0–4)</th><th>Nilai Min (%)</th><th>Rentang</th></tr>
             </thead>
             <tbody id="scaleBody"></tbody>
           </table>
         </div>
+        <p class="scale-note" style="margin-top:.6rem;">Nilai desimal masuk ke huruf dengan batas minimum tertinggi yang terpenuhi (mis. 85,5 = AB).</p>
         <div class="mt-2">
           <button class="btn btn-ghost btn-sm" id="btnScaleReset">Kembalikan ke default ITS</button>
         </div>
@@ -900,14 +901,18 @@
    STATE & CONSTANTS
 ============================================================ */
 const DEFAULT_SCALE = [
-  { letter: 'A',  point: 4.0, minScore: 85 },
-  { letter: 'AB', point: 3.5, minScore: 80 },
-  { letter: 'B',  point: 3.0, minScore: 70 },
-  { letter: 'BC', point: 2.5, minScore: 65 },
-  { letter: 'C',  point: 2.0, minScore: 55 },
-  { letter: 'D',  point: 1.0, minScore: 40 },
+  { letter: 'A',  point: 4.0, minScore: 86 },
+  { letter: 'AB', point: 3.5, minScore: 76 },
+  { letter: 'B',  point: 3.0, minScore: 66 },
+  { letter: 'BC', point: 2.5, minScore: 61 },
+  { letter: 'C',  point: 2.0, minScore: 56 },
+  { letter: 'D',  point: 1.0, minScore: 41 },
   { letter: 'E',  point: 0.0, minScore: 0  },
 ];
+
+// Old default (pre-R7) – used only for migration detection
+const OLD_DEFAULT_MINS = [85, 80, 70, 65, 55, 40, 0];
+const OLD_DEFAULT_PTS  = [4.0, 3.5, 3.0, 2.5, 2.0, 1.0, 0.0];
 
 const DEFAULT_PASS_LETTER = 'C';
 const STORAGE_KEY = 'targetip_v1';
@@ -968,7 +973,12 @@ function loadState() {
     // R6 migration: safe default if absent
     if (p.ipOverrides)  state.ipOverrides = p.ipOverrides;
     if (p.sim)          state.sim        = p.sim;
-    if (p.scale)        state.scale      = p.scale;
+    if (p.scale) {
+      // R7 migration: if saved scale exactly matches old default, upgrade to new default
+      const isOldDefault = p.scale.length === OLD_DEFAULT_MINS.length &&
+        p.scale.every((r, i) => r.minScore === OLD_DEFAULT_MINS[i] && r.point === OLD_DEFAULT_PTS[i]);
+      state.scale = isOldDefault ? DEFAULT_SCALE.map(r => ({ ...r })) : p.scale;
+    }
     if (p.nextCourseId) nextCourseId     = p.nextCourseId;
     if (p.nextIpId)     nextIpId         = p.nextIpId;
     if (p.nextCompId)   nextCompId       = p.nextCompId;
@@ -2076,15 +2086,41 @@ function updateSimResult() {
 /* ============================================================
    RENDER – FEATURE 4 (Grade Scale Editor)
 ============================================================ */
+/** Compute the display range string for scale row i (scale sorted high→low). */
+function scaleRangeText(i) {
+  const s = state.scale;
+  const lo = s[i].minScore;
+  const hi = (i === 0) ? 100 : s[i - 1].minScore - 1;
+  return lo === hi ? `${lo}` : `${lo}–${hi}`;
+}
+
+/** Check that scale minimums strictly decrease from index 0 to n-1 and last is 0. */
+function scaleIsValid() {
+  const s = state.scale;
+  if (s[s.length - 1].minScore !== 0) return false;
+  for (let i = 1; i < s.length; i++) {
+    if (s[i].minScore >= s[i - 1].minScore) return false;
+  }
+  return true;
+}
+
 function renderScaleTable() {
   const tbody = el('scaleBody');
   tbody.innerHTML = '';
-  for (const row of state.scale) {
+
+  // Clear any prior validation warning (re-rendered on edit)
+  const existingWarn = el('scaleValidWarn');
+  if (existingWarn) existingWarn.remove();
+
+  for (let i = 0; i < state.scale.length; i++) {
+    const row = state.scale[i];
     const tr = document.createElement('tr');
 
+    // ---- Huruf ----
     const tdL = document.createElement('td');
     tdL.innerHTML = `<strong style="color:var(--green)">${row.letter}</strong>`;
 
+    // ---- Poin ----
     const tdP = document.createElement('td');
     const ptI = document.createElement('input');
     ptI.type = 'number'; ptI.className = 'tbl-inp';
@@ -2097,6 +2133,7 @@ function renderScaleTable() {
     });
     tdP.appendChild(ptI);
 
+    // ---- Nilai Min ----
     const tdM = document.createElement('td');
     const minI = document.createElement('input');
     minI.type = 'number'; minI.className = 'tbl-inp';
@@ -2105,11 +2142,39 @@ function renderScaleTable() {
     minI.addEventListener('input', () => {
       clampInput(minI, 0, 100);
       row.minScore = parseFloat(minI.value) || 0;
-      saveState(); renderCourses();
+      // Update all range cells live (always, so user sees immediate feedback)
+      tbody.querySelectorAll('td[data-range-idx]').forEach(td => {
+        const idx = parseInt(td.dataset.rangeIdx, 10);
+        td.textContent = scaleRangeText(idx);
+      });
+      // Show/hide validation warning without re-rendering
+      let warn = el('scaleValidWarn');
+      if (!scaleIsValid()) {
+        if (!warn) {
+          warn = document.createElement('div');
+          warn.id = 'scaleValidWarn';
+          warn.className = 'alert alert-warn';
+          warn.style.marginBottom = '.6rem';
+          warn.textContent = 'Urutan minimum tidak valid: nilai minimum harus berkurang dari A ke E, dan E harus 0. Perubahan tidak disimpan.';
+          tbody.closest('.tbl-wrap').before(warn);
+        }
+        // Do not save or recalculate while invalid
+        return;
+      }
+      // Valid: remove warning if present, save, recalculate
+      if (warn) warn.remove();
+      saveState();
+      renderCourses();
     });
     tdM.appendChild(minI);
 
-    tr.append(tdL, tdP, tdM);
+    // ---- Rentang (read-only) ----
+    const tdR = document.createElement('td');
+    tdR.dataset.rangeIdx = i;
+    tdR.textContent = scaleRangeText(i);
+    tdR.style.cssText = 'font-size:.82rem;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;';
+
+    tr.append(tdL, tdP, tdM, tdR);
     tbody.appendChild(tr);
   }
 }
